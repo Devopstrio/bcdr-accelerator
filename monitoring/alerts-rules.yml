@@ -1,0 +1,36 @@
+# 📈 BCDR Monitoring & Alerting
+
+## Prometheus Alerts (Alerts-rules.yml)
+
+```yaml
+groups:
+- name: BCDR-Resilience-Alerts
+  rules:
+  - alert: CriticalRTOBreach
+    expr: bcdr_failover_duration_seconds > bcdr_rto_target_seconds
+    for: 1m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Actual RTO exceeded target for {{ $labels.plan_id }}"
+
+  - alert: ReplicationHealthDown
+    expr: bcdr_replication_health_status == 0
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Storage replication broken between Hub and Spoke"
+
+  - alert: DrillOverdue
+    expr: (time() - bcdr_last_drill_timestamp) / 86400 > 90
+    labels:
+      severity: warning
+    annotations:
+      summary: "DR Plan {{ $labels.plan_id }} has not been tested in 90 days"
+```
+
+## Grafana Metrics
+- **Global Readiness Score**: Aggregate 0-100% of all validated plans.
+- **Replication Lag**: Real-time milliseconds between primary and secondary storage.
+- **Failover Velocity**: Duration measurement of each step in the recovery cycle.

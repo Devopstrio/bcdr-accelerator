@@ -1,0 +1,41 @@
+name: "🚀 BCDR Platform CI/CD"
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validate:
+    name: "🕵️ Infrastructure & Code Lint"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: "Terraform Lint"
+        run: terraform fmt -check
+        
+      - name: "Security Scan (TfSec)"
+        run: |
+          docker run --rm -v $(pwd):/src tfsec/tfsec /src
+
+      - name: "API Unit Tests"
+        run: |
+          pip install pytest
+          pytest tests/test_api.py
+
+  build-deploy:
+    name: "📦 Container Build & Deploy"
+    needs: validate
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Login to Registry"
+        run: echo "Simulating Login"
+
+      - name: "Push Recovery Engine"
+        run: echo "Pushing Docker Image to ACR/ECR"
+
+      - name: "Terraform Apply"
+        run: echo "Deploying Platform Foundation"
